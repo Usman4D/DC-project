@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: room-service
+  labels:
+    app: room-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: room-service
+  template:
+    metadata:
+      labels:
+        app: room-service
+    spec:
+      containers:
+      - name: room-service
+        image: ${DOCKER_REGISTRY}/room-service:latest
+        ports:
+        - containerPort: 3003
+        env:
+        - name: REDIS_HOST
+          value: redis
+        - name: PORT
+          value: "3003"
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-service
+spec:
+  selector:
+    app: room-service
+  ports:
+  - port: 3003
+    targetPort: 3003 

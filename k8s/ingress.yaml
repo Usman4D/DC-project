@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/messages
+        pathType: Prefix
+        backend:
+          service:
+            name: message-service
+            port:
+              number: 3001
+      - path: /api/presence
+        pathType: Prefix
+        backend:
+          service:
+            name: presence-service
+            port:
+              number: 3002
+      - path: /api/rooms
+        pathType: Prefix
+        backend:
+          service:
+            name: room-service
+            port:
+              number: 3003
+      - path: /api/notifications
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 3004
+      - path: /ws
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 3004 

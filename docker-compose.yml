@@ -1,0 +1,50 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  message-service:
+    build: ./services/message-service
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - PORT=3001
+    ports:
+      - "3001:3001"
+
+  presence-service:
+    build: ./services/presence-service
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - PORT=3002
+    ports:
+      - "3002:3002"
+
+  room-service:
+    build: ./services/room-service
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - PORT=3003
+    ports:
+      - "3003:3003"
+
+  notification-service:
+    build: ./services/notification-service
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - PORT=3004
+    ports:
+      - "3004:3004"
+
+volumes:
+  redis-data: 
