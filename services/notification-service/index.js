@@ -180,7 +180,7 @@ app.get('/health', (req, res) => {
 });
 
 // Custom notification API route
-app.post('/notifications/:username', async (req, res) => {
+app.post('/api/notifications/:username', async (req, res) => {
   try {
     const { username } = req.params;
     const { title, message } = req.body;
@@ -215,7 +215,7 @@ app.post('/notifications/:username', async (req, res) => {
 });
 
 // Get pending notifications for a user
-app.get('/notifications/:username', async (req, res) => {
+app.get('/api/notifications/:username', async (req, res) => {
   try {
     const { username } = req.params;
     

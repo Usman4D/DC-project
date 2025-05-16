@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: presence-service
-        image: ${DOCKER_REGISTRY}/presence-service:latest
+        image: docker.io/library/presence-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3002
         env:

@@ -56,7 +56,7 @@ app.get('/health', (req, res) => {
 });
 
 // Get all rooms
-app.get('/rooms', async (req, res) => {
+app.get('/api/rooms', async (req, res) => {
   try {
     const roomNames = await redisClient.sMembers('rooms');
     
@@ -76,7 +76,7 @@ app.get('/rooms', async (req, res) => {
 });
 
 // Get a specific room by name
-app.get('/rooms/:name', async (req, res) => {
+app.get('/api/rooms/:name', async (req, res) => {
   try {
     const { name } = req.params;
     
@@ -99,7 +99,7 @@ app.get('/rooms/:name', async (req, res) => {
 });
 
 // Create a new room
-app.post('/rooms', async (req, res) => {
+app.post('/api/rooms', async (req, res) => {
   try {
     const { name, creator, description } = req.body;
     
@@ -128,7 +128,7 @@ app.post('/rooms', async (req, res) => {
 });
 
 // Join a room
-app.post('/rooms/:name/join', async (req, res) => {
+app.post('/api/rooms/:name/join', async (req, res) => {
   try {
     const { name } = req.params;
     const { username } = req.body;
@@ -162,7 +162,7 @@ app.post('/rooms/:name/join', async (req, res) => {
 });
 
 // Leave a room
-app.post('/rooms/:name/leave', async (req, res) => {
+app.post('/api/rooms/:name/leave', async (req, res) => {
   try {
     const { name } = req.params;
     const { username } = req.body;
@@ -191,7 +191,7 @@ app.post('/rooms/:name/leave', async (req, res) => {
 });
 
 // Get rooms joined by a user
-app.get('/users/:username/rooms', async (req, res) => {
+app.get('/api/users/:username/rooms', async (req, res) => {
   try {
     const { username } = req.params;
     

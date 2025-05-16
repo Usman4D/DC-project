@@ -31,7 +31,7 @@ app.get('/health', (req, res) => {
 });
 
 // Get all online users
-app.get('/users/online', async (req, res) => {
+app.get('/api/presence/users/online', async (req, res) => {
   try {
     const users = await redisClient.sMembers('online-users');
     
@@ -53,9 +53,10 @@ app.get('/users/online', async (req, res) => {
 });
 
 // Update user presence
-app.post('/users/:username/presence', async (req, res) => {
+app.post('/api/presence/users/:username/presence', async (req, res) => {
   try {
     const { username } = req.params;
+    console.log(`[Presence Service] POST /api/presence/users/${username}/presence received`);
     const timestamp = Date.now();
     
     // Add user to the set of online users
@@ -73,7 +74,7 @@ app.post('/users/:username/presence', async (req, res) => {
       data: { username, timestamp }
     }));
     
-    res.status(200).json({ status: 'online', timestamp });
+    res.status(200).json({ status: 'online', username_processed: username, timestamp });
   } catch (error) {
     console.error('Error updating user presence:', error);
     res.status(500).json({ error: 'Failed to update user presence' });
@@ -81,7 +82,7 @@ app.post('/users/:username/presence', async (req, res) => {
 });
 
 // User logout/offline
-app.delete('/users/:username/presence', async (req, res) => {
+app.delete('/api/presence/users/:username/presence', async (req, res) => {
   try {
     const { username } = req.params;
     

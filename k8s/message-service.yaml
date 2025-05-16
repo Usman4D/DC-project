@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: message-service
-        image: ${DOCKER_REGISTRY}/message-service:latest
+        image: docker.io/library/message-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3001
         env:

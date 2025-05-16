@@ -3,7 +3,8 @@ kind: Ingress
 metadata:
   name: chat-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    traefik.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:

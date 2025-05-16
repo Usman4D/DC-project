@@ -12,11 +12,17 @@ const readline = require('readline');
 // Configuration
 const config = {
   host: process.env.CHAT_HOST || 'localhost',
-  messageService: process.env.MESSAGE_SERVICE_PORT || 3001,
-  presenceService: process.env.PRESENCE_SERVICE_PORT || 3002,
-  roomService: process.env.ROOM_SERVICE_PORT || 3003,
-  notificationService: process.env.NOTIFICATION_SERVICE_PORT || 3004
+  messageServicePort: process.env.MESSAGE_SERVICE_PORT || 3001,
+  presenceServicePort: process.env.PRESENCE_SERVICE_PORT || 3002,
+  roomServicePort: process.env.ROOM_SERVICE_PORT || 3003,
+  notificationServicePort: process.env.NOTIFICATION_SERVICE_PORT || 3004,
+  useIngress: process.env.CHAT_HOST && process.env.CHAT_HOST !== 'localhost',
+  apiBasePath: process.env.CHAT_API_BASE_PATH || '/api',
+  wsPath: process.env.CHAT_WS_PATH || '/ws'
 };
+
+// Determine if we are targeting an Ingress or direct host/port
+const useIngress = config.host !== 'localhost';
 
 // Shared state
 let username = process.env.USER || 'user-' + Math.floor(Math.random() * 1000);
@@ -25,19 +31,19 @@ let ws = null;
 
 // Create API clients
 const messageApi = axios.create({
-  baseURL: `http://${config.host}:${config.messageService}`
+  baseURL: useIngress ? `http://${config.host}${config.apiBasePath}/messages` : `http://${config.host}:${config.messageServicePort}`
 });
 
 const presenceApi = axios.create({
-  baseURL: `http://${config.host}:${config.presenceService}`
+  baseURL: useIngress ? `http://${config.host}${config.apiBasePath}/presence` : `http://${config.host}:${config.presenceServicePort}`
 });
 
 const roomApi = axios.create({
-  baseURL: `http://${config.host}:${config.roomService}`
+  baseURL: useIngress ? `http://${config.host}${config.apiBasePath}/rooms` : `http://${config.host}:${config.roomServicePort}`
 });
 
 const notificationApi = axios.create({
-  baseURL: `http://${config.host}:${config.notificationService}`
+  baseURL: useIngress ? `http://${config.host}/` : `http://${config.host}:${config.notificationServicePort}`
 });
 
 // Connect to the notification WebSocket
@@ -45,7 +51,10 @@ function connectWebSocket() {
   return new Promise((resolve, reject) => {
     const spinner = ora('Connecting to chat server...').start();
     
-    ws = new WebSocket(`ws://${config.host}:${config.notificationService}`);
+    const wsUrl = useIngress 
+      ? `ws://${config.host}${config.wsPath}` 
+      : `ws://${config.host}:${config.notificationServicePort}`;
+    ws = new WebSocket(wsUrl);
     
     ws.on('open', () => {
       spinner.succeed('Connected to chat server');
@@ -157,10 +166,10 @@ async function joinRoom(roomName) {
     const spinner = ora(`Joining room ${roomName}...`).start();
     
     // Join the room
-    await roomApi.post(`/rooms/${roomName}/join`, { username });
+    await roomApi.post(`/${roomName}/join`, { username });
     
     // Get recent messages
-    const { data: messages } = await messageApi.get(`/messages/${roomName}`);
+    const { data: messages } = await messageApi.get(`/${roomName}`);
     
     spinner.succeed(`Joined room: ${roomName}`);
     
@@ -194,7 +203,7 @@ async function joinRoom(roomName) {
       
       if (line === '/quit' || line === '/exit') {
         // Leave the room
-        await roomApi.post(`/rooms/${roomName}/leave`, { username });
+        await roomApi.post(`/${roomName}/leave`, { username });
         currentRoom = null;
         rl.close();
         console.log(chalk.yellow(`Left room: ${roomName}`));
@@ -209,7 +218,7 @@ async function joinRoom(roomName) {
       
       // Send the message
       try {
-        await messageApi.post(`/messages/${roomName}`, {
+        await messageApi.post(`/${roomName}`, {
           sender: username,
           content: line
         });
@@ -229,7 +238,7 @@ async function sendDirectMessage(recipient, message) {
   try {
     const spinner = ora(`Sending message to ${recipient}...`).start();
     
-    await messageApi.post(`/messages/direct/${recipient}`, {
+    await messageApi.post(`/direct/${recipient}`, {
       sender: username,
       content: message
     });
@@ -246,7 +255,7 @@ async function listRoomsAndUsers() {
     console.log(chalk.bold('\nAvailable Rooms:'));
     
     // Get all rooms
-    const { data: rooms } = await roomApi.get('/rooms');
+    const { data: rooms } = await roomApi.get('/');
     
     if (rooms.length === 0) {
       console.log('No rooms available');
@@ -279,11 +288,7 @@ async function createRoom(name, description) {
   try {
     const spinner = ora(`Creating room ${name}...`).start();
     
-    await roomApi.post('/rooms', {
-      name,
-      creator: username,
-      description
-    });
+    await roomApi.post('/', { name, creator: username, description });
     
     spinner.succeed(`Room created: ${name}`);
   } catch (error) {
@@ -301,7 +306,7 @@ program
   .description('Join a chat room')
   .action(async (room) => {
     try {
-      await connectWebSocket();
+      await connectWebSocketIfNeeded();
       const heartbeat = setupPresenceHeartbeat();
       await joinRoom(room);
       clearInterval(heartbeat);
@@ -316,7 +321,7 @@ program
   .description('Send a direct message to a user')
   .action(async (recipient, message) => {
     try {
-      await connectWebSocket();
+      await connectWebSocketIfNeeded();
       const heartbeat = setupPresenceHeartbeat();
       await sendDirectMessage(recipient, message);
       setTimeout(() => {
@@ -334,7 +339,7 @@ program
   .description('List all available rooms and online users')
   .action(async () => {
     try {
-      await connectWebSocket();
+      await connectWebSocketIfNeeded();
       const heartbeat = setupPresenceHeartbeat();
       await listRoomsAndUsers();
       setTimeout(() => {
@@ -352,7 +357,7 @@ program
   .description('Create a new chat room')
   .action(async (name, description) => {
     try {
-      await connectWebSocket();
+      await connectWebSocketIfNeeded();
       const heartbeat = setupPresenceHeartbeat();
       await createRoom(name, description || '');
       setTimeout(() => {
@@ -374,4 +379,10 @@ program
   });
 
 // Parse arguments
-program.parse(process.argv); 
+program.parse(process.argv);
+
+async function connectWebSocketIfNeeded() {
+  if (!ws || ws.readyState === WebSocket.CLOSED) {
+    await connectWebSocket();
+  }
+} 

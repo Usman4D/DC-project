@@ -29,7 +29,7 @@ app.get('/health', (req, res) => {
 });
 
 // Get messages for a room
-app.get('/messages/:room', async (req, res) => {
+app.get('/api/messages/:room', async (req, res) => {
   try {
     const { room } = req.params;
     const messages = await redisClient.lRange(`room:${room}:messages`, 0, -1);
@@ -42,7 +42,7 @@ app.get('/messages/:room', async (req, res) => {
 });
 
 // Send a message to a room
-app.post('/messages/:room', async (req, res) => {
+app.post('/api/messages/:room', async (req, res) => {
   try {
     const { room } = req.params;
     const { sender, content } = req.body;
@@ -79,7 +79,7 @@ app.post('/messages/:room', async (req, res) => {
 });
 
 // Send a direct message to a user
-app.post('/messages/direct/:username', async (req, res) => {
+app.post('/api/messages/direct/:username', async (req, res) => {
   try {
     const { username } = req.params;
     const { sender, content } = req.body;
@@ -119,7 +119,7 @@ app.post('/messages/direct/:username', async (req, res) => {
 });
 
 // Get direct messages between two users
-app.get('/messages/direct/:sender/:recipient', async (req, res) => {
+app.get('/api/messages/direct/:sender/:recipient', async (req, res) => {
   try {
     const { sender, recipient } = req.params;
     

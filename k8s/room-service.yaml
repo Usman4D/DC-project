@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: room-service
-        image: ${DOCKER_REGISTRY}/room-service:latest
+        image: docker.io/library/room-service:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3003
         env:
