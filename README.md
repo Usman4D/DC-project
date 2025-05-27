@@ -1,3 +1,7 @@
+Though this app was vibe coded, Me and my team conducted much research on what distributed systems archicture to use. This app along with Kubernetes was deployed on my local linux device, and presented as a demo to evaluators, Sir Nabeel and Sir Gul Munir.
+
+Below Readme is generated with GPT 4.1
+
 # Distributed CLI Chat Application
 
 A distributed chat platform accessible entirely from the command line.
